@@ -7,8 +7,7 @@
 ### START OF INPUT PARAMETERS ###
 
 # Project 
-projectAccount=gspasov
-
+projectAccount=
 # Software releases
 foamRelease=2012 #(v1906)
 
