@@ -1,0 +1,17 @@
+lines{
+    type sets;
+    enabled true;
+    verbose true;
+    interpolationScheme cellPoint;
+    writeControl        adjustableRunTime;
+    writeInterval   1e-3;
+    setFormat raw;
+    fields (U p k R UMean pMean); //insert the fields you would like to sample
+    sets
+    (
+
+      #include "LCOORDS"
+
+    );
+}
+

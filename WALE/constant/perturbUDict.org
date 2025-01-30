@@ -1,0 +1,49 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+    instance        "system";
+    class           dictionary;
+    object          perturbUDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+// Expected turbulent Re(tau) Reynolds number with respect to utau
+Retau 360;
+
+// Halfheight of channel (must be in the x-direction)
+d RADIUS;
+
+// Set (overwrite) velocity to laminar profile
+setBulk true;
+
+// Perturb velocity with some cosine like perturbations
+perturb true;
+
+//wall normal circulation as a fraction of Ubar/utau
+duPlus 0.15;
+
+//spanwise perturbation spacing in wall units
+betaPlus 100;
+
+//streamwise perturbation spacing in wall units
+alphaPlus 800;
+
+//transverse decay
+sigma 0.000055;
+
+//linear perturbation amplitude as a fraction of Ubar
+epsilonPlus 0.05;
+
+
+// ************************************************************************* //

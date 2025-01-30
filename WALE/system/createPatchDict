@@ -1,0 +1,46 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v1606+                                |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      createPatchDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+pointSync false;
+
+patches
+(
+    {
+        name            cyclic0;
+        patchInfo
+        {
+            type            cyclic;
+            neighbourPatch  cyclic1;
+            transform       noOrdering;
+        }
+        constructFrom patches;
+        patches (x0);
+    }
+
+    {
+        name            cyclic1;
+        patchInfo
+        {
+            type            cyclic;
+            neighbourPatch  cyclic0;
+            transform       noOrdering;
+        }
+        constructFrom patches;
+        patches (x1);
+    }
+);
+
+// ************************************************************************* //

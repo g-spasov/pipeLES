@@ -1,0 +1,33 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  plus                                  |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+"symmetry.*"
+{
+    type            symmetry;
+}
+
+"empty.*"
+{
+    type            empty;
+}
+
+"cyclic.*"
+{
+    type            cyclic;
+    value           $internalField;
+}
+
+"AMI.*"
+{
+    type            cyclicAMI;
+    value           $internalField;
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

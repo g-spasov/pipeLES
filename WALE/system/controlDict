@@ -1,0 +1,202 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  plus                                  |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location	system;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     pimpleFoam;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         1.1;
+
+deltaT          5e-5;
+
+writeControl    adjustableRunTime;
+
+writeInterval   1e-1;
+
+purgeWrite      1;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable true;
+
+adjustTimeStep  y;
+
+maxCo           0.5;
+
+maxDeltaT       1;
+
+functions 
+{
+   	viscousRegionVelocityProbe
+   	{
+    	type probes;
+      	libs ("libsampling.so");
+
+      	probeLocations ((6e-2 0.99e-2 0));
+      	fields (U);
+
+      	writeControl  timeStep;
+      	writeInterval 1;
+   	}
+
+   	bufferRegionVelocityProbe
+   	{
+    	type probes;
+      	libs ("libsampling.so");
+
+      	probeLocations ((6e-2 0.9e-2 0));
+      	fields (U);
+
+      	writeControl  timeStep;
+      	writeInterval 1;
+   	}
+
+   	turbulentRegionVelocityProbe
+	{
+		type probes;
+		libs ("libsampling.so");
+
+		probeLocations ((6e-2 0.5e-2 0));
+		fields (U);
+
+		writeControl  timeStep;
+		writeInterval 1;
+	}
+
+	cutPlanes
+    {
+	    type            surfaces;
+	    libs            ("libsampling.so");
+
+	    writeControl	adjustableRunTime;
+		writeInterval	1e-3;
+
+	    interpolationScheme cellPoint;
+	    surfaceFormat   vtp;
+
+	    fields
+		(
+			p
+			U
+		);
+
+	    surfaces
+	    (
+	        midPlane
+	        {
+	            type            cuttingPlane;
+	            planeType       pointAndNormal;
+	            pointAndNormalDict
+	            {
+	                point   (0 0 1e-06);
+	                normal  (0 0 1);
+	            }
+	            interpolate     true;
+	        }
+	    );
+    }
+
+	dummy
+	{
+		type	Lambda2;
+		
+		libs ("libfieldFunctionObjects.so");
+
+	    executeControl  adjustableRunTime;
+		executeInterval	5e-3;
+
+	    writeControl	runTime;
+		writeInterval	1e+6;
+
+		writeFields	no;
+		log	no;
+	}
+
+	isoSurfaces
+    {
+        type	surfaces;
+
+        libs ("libsampling.so");
+        
+		writeControl  adjustableRunTime;
+        writeInterval 5e-3;
+	    
+		interpolationScheme cellPoint;
+		surfaceFormat  vtp;
+
+		fields	();
+        
+		surfaces
+        (
+            Lambda2
+            {
+                type        isoSurface;
+                isoField    Lambda2;
+                isoValue    0.015;
+                interpolate true;
+            }
+        );
+    }
+
+	temporalStatistics
+    {
+        type fieldAverage;
+ 		libs ("libfieldFunctionObjects.so");
+
+		writeControl    	adjustableRunTime;
+        writeInterval   	1e-1;
+
+		timeStart			1e-3;
+		restartOnRestart    true;
+     
+		fields
+        (
+            p
+            {
+                mean            true;
+                prime2Mean      true;
+                base            time;
+            }
+            U
+            {
+                mean            true;
+                prime2Mean      true;
+                base            time;
+            }
+			k
+            {
+                mean            true;
+            	prime2Mean      false;
+			    base            time;
+            }
+        );
+    }	
+}
+
+// ************************************************************************* //

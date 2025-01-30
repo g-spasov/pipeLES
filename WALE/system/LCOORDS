@@ -1,0 +1,27 @@
+L1
+{
+  type uniform;
+  axis distance;
+  start (6e-2 1e-2 0);
+  end   (6e-2 -1e-2 0);
+  nPoints 1000;
+}
+L2
+{
+  type uniform;
+  axis distance;
+  start (7e-2 1e-2 0);
+  end   (7e-2 -1e-2 0);
+  nPoints 1000;
+}
+
+L3
+{
+  type uniform;
+  axis distance;
+  start (10e-2 0 1e-2);
+  end   (10e-2 0 -1e-2);
+  nPoints 1000;
+}
+
+

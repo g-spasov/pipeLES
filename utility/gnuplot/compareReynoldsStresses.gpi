@@ -1,0 +1,120 @@
+### START OF USER INPUTS ###
+
+# Plot options (screen/file)
+plotOption='screen'
+
+# Input data
+inputData='/gpfs/scratch/usera06chi/a06chi00/courses/openfoam/2021/tutorials/academic/turbulentPipe/datasets/ElKhouryEtAl/pipe360.dat /gpfs/scratch/usera06chi/a06chi00/courses/openfoam/2021/tutorials/academic/turbulentPipe/datasets/ElKhouryEtAl/pipe360.dat /gpfs/scratch/usera06chi/a06chi00/courses/openfoam/2021/tutorials/academic/turbulentPipe/datasets/ElKhouryEtAl/pipe360.dat /gpfs/scratch/usera06chi/a06chi00/courses/openfoam/2021/tutorials/academic/turbulentPipe/datasets/ElKhouryEtAl/pipe360.dat averagedProfiles.dat averagedProfiles.dat averagedProfiles.dat averagedProfiles.dat'
+
+# Input labels
+inputLabels="'DNS/Rzz' 'DNS/Rtt' 'DNS/Rrr' 'DNS/Rzr' 'OF/Rzz' 'OF/Rtt' 'OF/Rrr' 'OF/Rzr'"
+
+# Input columns
+xAxisColumn='1 1 1 1 12 12 12 12'
+yAxisColumn='12 11 10 8 4 17 16 18'
+#xAxisColumn='13 13 13 13 13 13 13 13'
+#yAxisColumn='7 17 16 18 7 17 16 18'
+
+# Scale factor
+xReference='0 0 0 0 0 0 0 0'
+#xReference='0.0155 0.0155 0.0155 0.0155 0.0155 0.0155 0.0155 0.0155'
+yReference='0 0 0 0 0 0 0 0'
+xScaling='1 1 1 1 1 1 1 1'
+yScaling='1 1 1 -1 20400 20400 20400 -20400'
+#xScaling='19.6 19.6 19.6 19.6 19.6 19.6 19.6 19.6'
+#yScaling='13 13 13 -13 13 13 13 -13'
+
+# Plot title
+plotTitle=''
+
+# Plot labels
+xAxisLabel='Distance from wall (-)'
+#xAxisLabel='R/D (-)'
+yAxisLabel='Reynolds stress (-)'
+
+# Plot range (use 'auto' for automatic range)
+xAxisRange='0 1'
+yAxisRange='auto'
+
+# Data axis style (numerics/lowhigh)
+yAxisStyle='numerics'
+
+# Data labels (yes/no)
+dataLabels='no'
+
+# Output file
+outputFile='OFReynoldsStressesValidation'
+
+# Term size
+termSize='1080 1080'
+
+# Font style
+#fontType='/galileo/home/userexternal/rrossi00/fonts/futura/futura-medium-bt.ttf'
+fontType='/galileo/home/userexternal/rrossi00/fonts/helvetica/helvetica-normal.ttf'
+fontMainSize=20
+fontDataSize=20
+
+# Line style
+lineWidth='3 3 3 3 3 3 3 3'
+pointWidth='0 0 0 0 0 0 0 0'
+pointType='6 6 6 6 6 6 6 6'
+
+# Legend style
+legendOrientation='vertical'
+legendPosition='topRight'
+legendFontSize=20
+
+# Set coloramp (gnuplot)
+colorMap='gnuplot'
+
+### END OF USER INPUTS ###
+
+# Set term
+if(plotOption eq 'file'){
+set term png size word(termSize,1),word(termSize,2) font fontType.','.fontMainSize}
+set format y "%.1e"
+
+# Set title
+set title plotTitle font fontType.','.int(fontMainSize*1.25)
+
+# Set legend
+set key font fontType.','.legendFontSize
+if(legendOrientation eq 'horizontal'){set key horiz}
+else{set key vert}
+if(legendPosition eq 'topRight'){set key top right}
+else{if(legendPosition eq 'topLeft'){set key top left}
+else{if(legendPosition eq 'topLeft'){set key bottom right}
+else{if(legendPosition eq 'topLeft'){set key bottom left}}}}
+
+# Set colormap
+if(colorMap eq 'gnuplot'){
+colors='red green blue cyan magenta yellow black purple'}
+
+# Set ranges
+if(word(xAxisRange,1) eq 'auto'){set xrange [*:*]}
+else{
+set xrange [word(xAxisRange,1):word(xAxisRange,2)]}
+
+if(word(yAxisRange,1) eq 'auto'){set yrange [*:*]}
+else{
+set yrange [word(yAxisRange,1):word(yAxisRange,2)]}
+
+# Plot data
+if(plotOption eq 'file'){set output outputFile.'.png'}
+if(plotOption ne 'file'){set term x11 0}
+
+set xlabel xAxisLabel font fontType.','.int(fontMainSize*1.25)
+set ylabel yAxisLabel font fontType.','.int(fontMainSize*1.25)
+
+if(yAxisStyle eq 'lowhigh'){set ytics ("Low" word(yAxisRange,1), "High" word(yAxisRange,2))}
+
+if(dataLabels eq 'yes'){
+	plot for [i=1:words(inputData)] word(inputData,i) using (((column(int(word(xAxisColumn,i))))-word(xReference,i))*word(xScaling,i)):(((column(int(word(yAxisColumn,i))))-word(yReference,i))*word(yScaling,i)) t word(inputLabels,i) w lp pt int(word(pointType,i)) ps word(pointWidth,i) lw word(lineWidth,i) lc rgb word(colors,i),\
+		for [i=1:words(inputData)] word(inputData,i) using (((column(int(word(xAxisColumn,i))))-word(xReference,i))*word(xScaling,i)):(((column(int(word(yAxisColumn,i))))-word(yReference,i))*word(yScaling,i)):(sprintf("%.2e",(((column(int(word(yAxisColumn,i))))-word(yReference,i))*word(yScaling,i)))) with labels font ','.fontDataSize tc rgb word(colors,i) offset 0,0.5 notitle}
+else{
+	plot for [i=1:words(inputData)] word(inputData,i) using (((column(int(word(xAxisColumn,i))))-word(xReference,i))*word(xScaling,i)):(((column(int(word(yAxisColumn,i))))-word(yReference,i))*word(yScaling,i)) t word(inputLabels,i) w lp pt int(word(pointType,i)) ps word(pointWidth,i) lw word(lineWidth,i) lc rgb word(colors,i)}
+
+if(plotOption eq 'file'){exit}
+
+pause 1
+reread

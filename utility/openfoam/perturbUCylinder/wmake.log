@@ -1,0 +1,30 @@
+Making dependency list for source file perturbU.C
+g++ -std=c++11 -m64 -pthread -DOPENFOAM=2012 -DWM_DP -DWM_LABEL_SIZE=32 -Wall -Wextra -Wold-style-cast -Wnon-virtual-dtor -Wno-unused-parameter -Wno-invalid-offsetof -Wno-attributes -Wno-unknown-pragmas  -O3  -DNoRepository -ftemplate-depth-100 -I/scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/meshTools/lnInclude -I/scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/finiteVolume/lnInclude  -iquote. -IlnInclude -I/scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/OpenFOAM/lnInclude -I/scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/OSspecific/POSIX/lnInclude   -fPIC -c perturbU.C -o Make/linux64GccDPInt32Opt/perturbU.o
+perturbU.C: In function ‘int main(int, char**)’:
+perturbU.C:123:5: warning: ‘Foam::dimensioned<Type>::dimensioned(Foam::Istream&) [with Type = double]’ is deprecated: Since 2018-11 [-Wdeprecated-declarations]
+     );
+     ^
+In file included from /scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/OpenFOAM/lnInclude/dimensionedType.H:571,
+                 from /scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/OpenFOAM/lnInclude/dimensionedScalar.H:41,
+                 from /scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/OpenFOAM/lnInclude/TimeState.H:41,
+                 from /scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/OpenFOAM/lnInclude/Time.H:50,
+                 from /scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/finiteVolume/lnInclude/fvCFD.H:6,
+                 from perturbU.C:40:
+/scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/OpenFOAM/lnInclude/dimensionedType.C:305:1: note: declared here
+ Foam::dimensioned<Type>::dimensioned(Istream& is)
+ ^~~~
+perturbU.C:127:5: warning: ‘Foam::dimensioned<Type>::dimensioned(Foam::Istream&) [with Type = Foam::Vector<double>]’ is deprecated: Since 2018-11 [-Wdeprecated-declarations]
+     );
+     ^
+In file included from /scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/OpenFOAM/lnInclude/dimensionedType.H:571,
+                 from /scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/OpenFOAM/lnInclude/dimensionedScalar.H:41,
+                 from /scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/OpenFOAM/lnInclude/TimeState.H:41,
+                 from /scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/OpenFOAM/lnInclude/Time.H:50,
+                 from /scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/finiteVolume/lnInclude/fvCFD.H:6,
+                 from perturbU.C:40:
+/scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/OpenFOAM/lnInclude/dimensionedType.C:305:1: note: declared here
+ Foam::dimensioned<Type>::dimensioned(Istream& is)
+ ^~~~
+g++ -std=c++11 -m64 -pthread -DOPENFOAM=2012 -DWM_DP -DWM_LABEL_SIZE=32 -Wall -Wextra -Wold-style-cast -Wnon-virtual-dtor -Wno-unused-parameter -Wno-invalid-offsetof -Wno-attributes -Wno-unknown-pragmas  -O3  -DNoRepository -ftemplate-depth-100 -I/scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/meshTools/lnInclude -I/scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/finiteVolume/lnInclude  -iquote. -IlnInclude -I/scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/OpenFOAM/lnInclude -I/scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/src/OSspecific/POSIX/lnInclude   -fPIC -Xlinker --add-needed -Xlinker --no-as-needed  Make/linux64GccDPInt32Opt/perturbU.o -L/scratch/mathlab/packages/source/OpenFOAM/OpenFOAM-v2012/platforms/linux64GccDPInt32Opt/lib \
+    -lmeshTools -lfiniteVolume  -lOpenFOAM -ldl  \
+     -lm -o /home/gspasov/OpenFoam/platforms/linux64IccDPInt32OptBDW/bin/perturbUCylinder

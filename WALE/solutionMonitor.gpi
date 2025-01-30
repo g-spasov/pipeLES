@@ -1,0 +1,92 @@
+### START OF USER INPUTS ###
+
+# Plot options (screen/file)
+plotOption='screen'
+
+# File tag
+fileTag=''
+
+# Time folders
+timeFolders='0'
+
+# Plot range (use 'auto' for automatic range)
+timeRange='auto'
+
+# Set term size
+termSize='1920 1080'
+
+# Set font size
+fontSize=18
+fontType='/galileo/home/userexternal/rrossi00/fonts/helvetica/helvetica-normal.ttf'
+
+# Set line style
+lineWidth=2
+pointWidth=2
+
+# Set coloramp (gnuplot)
+colorMap='gnuplot'
+
+### END OF USER INPUTS ###
+
+# Check status
+status=system("[ ! -d postProcessing ]; echo $?")
+if(status eq '0'){print "\n Foam didn't start yet. Please wait...\n"; exit}
+
+# Set colormap
+if(colorMap eq 'gnuplot'){
+colors='red green blue cyan magenta yellow black'}
+
+# Set time range
+if(word(timeRange,1) eq 'auto'){set xrange [*:*]}
+else{if(word(timeRange,2) eq '*'){set xrange [word(timeRange,1):*]}
+else{set xrange [word(timeRange,1):word(timeRange,2)]}}
+
+# Plot monitor 0
+if(plotOption eq 'file'){
+set term png size word(termSize,1),word(termSize,2) font fontType.','.fontSize
+set output 'viscousRegionVelocityMonitor'.fileTag.'.png'}
+if(plotOption eq 'screen'){
+set term x11 0}
+set key left top
+
+set title 'Viscous region velocity monitor'
+set ylabel 'Streamwise velocity (m/s)'
+set xlabel 'Time'
+
+plot for [i=1:words(timeFolders)] "< sed 's/[()]//g' < postProcessing/viscousRegionVelocityProbe/".word(timeFolders,i)."/U" using 1:($2) not w l lw lineWidth lc rgb word(colors,1),\
+     "< sed 's/[()]//g' < postProcessing/viscousRegionVelocityProbe/".word(timeFolders,words(timeFolders))."/U | tail -n 1" u 1:($2) not w p pt 7 ps pointWidth lc rgb word(colors,1)
+
+# Plot monitor 1
+if(plotOption eq 'file'){
+set term png size word(termSize,1),word(termSize,2) font fontType.','.fontSize
+set output 'bufferRegionVelocityMonitor'.fileTag.'.png'}
+if(plotOption eq 'screen'){
+set term x11 1}
+set key left top
+
+set title 'Buffer region velocity monitor'
+set ylabel 'Streamwise velocity (m/s)'
+set xlabel 'Time'
+
+plot for [i=1:words(timeFolders)] "< sed 's/[()]//g' < postProcessing/bufferRegionVelocityProbe/".word(timeFolders,i)."/U" using 1:($2) not w l lw lineWidth lc rgb word(colors,1),\
+     "< sed 's/[()]//g' < postProcessing/bufferRegionVelocityProbe/".word(timeFolders,words(timeFolders))."/U | tail -n 1" u 1:($2) not w p pt 7 ps pointWidth lc rgb word(colors,1)
+
+# Plot monitor 2
+if(plotOption eq 'file'){
+set term png size word(termSize,1),word(termSize,2) font fontType.','.fontSize
+set output 'turbulentRegionVelocityMonitor'.fileTag.'.png'}
+if(plotOption eq 'screen'){
+set term x11 2}
+set key left top
+
+set title 'Turbulent region velocity monitor'
+set ylabel 'Streamwise velocity (m/s)'
+set xlabel 'Time'
+
+plot for [i=1:words(timeFolders)] "< sed 's/[()]//g' < postProcessing/turbulentRegionVelocityProbe/".word(timeFolders,i)."/U" using 1:($2) not w l lw lineWidth lc rgb word(colors,1),\
+     "< sed 's/[()]//g' < postProcessing/turbulentRegionVelocityProbe/".word(timeFolders,words(timeFolders))."/U | tail -n 1" u 1:($2) not w p pt 7 ps pointWidth lc rgb word(colors,1)
+
+if(plotOption eq 'file'){exit}
+
+pause 1
+reread

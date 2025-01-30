@@ -1,0 +1,103 @@
+### START OF USER INPUTS ###
+
+# Residuals list
+residuals='p Ux Uy Uz'
+
+# Plot options (screen/file)
+plotOption='screen'
+
+# Output label
+outputLabel=''
+
+# Plot range (use 'auto' for automatic range)
+timeRange='auto'
+plotRange='auto'
+
+# Set term size
+termSize='1920 1080'
+
+# Set font size
+fontSize=18
+fontType='/galileo/home/userexternal/rrossi00/fonts/helvetica/helvetica-normal.ttf'
+
+# Set lines width
+lineWidth=2
+pointWidth=2
+
+# Set legend style
+keyOrientation='horiz'
+keyLocation='topRight'
+
+# Set coloramp (gnuplot)
+colorMap='gnuplot'
+
+### END OF USER INPUTS ###
+
+# Check status
+status=system("[ ! -s runFoam.log ]; echo $?")
+if(status eq '0'){print "\n Foam didn't start yet. Please wait...\n"; exit}
+
+# Set colormap
+if(colorMap eq 'gnuplot'){
+colors='red green blue cyan magenta yellow black'}
+
+# Set term
+if(plotOption eq 'file'){
+set term png size word(termSize,1),word(termSize,2) font fontType.','.fontSize}
+set key font fontType.','.fontSize
+
+# Set legend
+set key noenhanced
+if(keyOrientation eq 'horiz'){set key horiz}
+if(keyOrientation eq 'vert'){set key vert}
+if(keyLocation eq 'topLeft'){set key top left}
+if(keyLocation eq 'topRight'){set key top right}
+if(keyLocation eq 'bottomRight'){set key bottom right}
+if(keyLocation eq 'bottomLeft'){set key bottom left}
+
+# Set time range
+if(word(timeRange,1) eq 'auto'){set xrange [*:*]}
+else{if(word(timeRange,2) eq '*'){set xrange [word(timeRange,1):*]}
+else{set xrange [word(timeRange,1):word(timeRange,2)]}}
+
+# Set residulas range
+if(word(plotRange,1) eq 'auto'){set yrange [*:*]}
+else{if(word(plotRange,2) eq '*'){set yrange [word(plotRange,1):*]}
+else{set yrange [word(plotRange,1):word(plotRange,2)]}}
+
+# Set skip for residuals
+skip=''
+nOuterIterations=system("grep nOuterCorrectors system/fvSolution | awk '{print $2}' | awk -F ';' '{print $1}'")
+if(nOuterIterations eq ''){nOuterIterations='1'}
+nCorrectors=system("grep nCorrectors system/fvSolution | awk '{print $2}' | awk -F ';' '{print $1}'")
+if(nCorrectors eq ''){nCorrectors='1'}
+nAlphaSubCycles=system("grep nAlphaSubCycles system/fvSolution | awk '{print $2}' | awk -F ';' '{print $1}'")
+if(nAlphaSubCycles eq ''){nAlphaSubCycles='1'}
+do for [i=1:words(residuals)]{
+nCorrectorsTotal=nCorrectors*nOuterIterations
+nAlphaSubCyclesTotal=nAlphaSubCycles*nOuterIterations
+if(word(residuals,i) eq 'p'){skip=skip.sprintf("%d ",nCorrectorsTotal)}
+else{if(word(residuals,i) eq 'p_rgh'){skip=skip.sprintf("%d ",nCorrectorsTotal)}
+else{if(word(residuals,i) eq 'alpha.water'){skip=skip.sprintf("%d ",nAlphaSubCyclesTotal)}
+else{if(word(residuals,i) eq 'Ux'){skip=skip.sprintf("%s ",nOuterIterations)}
+else{if(word(residuals,i) eq 'Uy'){skip=skip.sprintf("%s ",nOuterIterations)}
+else{if(word(residuals,i) eq 'Uz'){skip=skip.sprintf("%s ",nOuterIterations)}
+else{skip=skip.sprintf("%d ",1)}}}}}}}
+
+# Plot residuals
+if(plotOption eq 'file'){set output 'residualsMonitor'.outputLabel.'.png'}
+if(plotOption ne 'file'){set term x11 0}
+
+set title "Solution monitor"
+set ylabel "Residual"
+set xlabel "Time step"
+set format y "10^{%L}"
+set logscale y
+
+plot for [i=1:words(residuals)] "< cat runFoam.log | grep 'Solving for ".word(residuals,i)."' | cut -d' ' -f9 | tr -d ',' | awk 'NR%".word(skip,i)."==0' | awk '{print $1,NR}'" u 2:1  not w l lw lineWidth lc rgb word(colors,i),\
+	 for [i=1:words(residuals)] "< cat runFoam.log | grep 'Solving for ".word(residuals,i)."' | cut -d' ' -f9 | tr -d ',' | awk 'NR%".word(skip,i)."==0' | awk '{print $1,NR}' | tail -n 1" using 2:1 title word(residuals,i) w p pt 7 ps pointWidth lc rgb word(colors,i) 
+
+if(plotOption eq 'file'){exit}
+
+pause 1
+reread

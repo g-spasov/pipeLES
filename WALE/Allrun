@@ -1,0 +1,228 @@
+#!/bin/bash
+
+# Description: script for fully automated simulation of fully-developed turbulent pipe flow
+# Usage: use ./Allrun to run the script, use ./Allrun >& Allrun.log & to run in batch mode
+# Options: units and options for input parameters are shown in parenthesis (option#1/option#2,...,option#n)
+
+### START OF INPUT PARAMETERS ###
+
+# Project 
+projectAccount=gspasov
+
+# Software releases
+foamRelease=2012 #(v1906)
+
+# Run options
+runMesh=n
+runFoam=y
+
+# Grid setup
+pipeDiameter=2e-2 #(m)
+pipeLength=12e-2 #(m)
+axialResolution=200 #(cells)
+radialResolution=80 #(cells)
+radialExpansionRatio=1.2
+nLayers=10
+
+# Model setup
+fluidViscosity=2e-5 #(m2/s)
+bulkVelocity=11.5 #(m/s)
+
+# Run setup
+endTime=1.1
+timeStep=5e-5
+adjustTimeStep=y
+maxCourant=0.5
+perturbFlow=y
+writeInterval=1e-1
+writeAll=n
+restartRun=y
+decomposeCase=n
+cleanProcessors=n
+reconstructAll=n
+
+# Postprocess setup
+writeMonitorsFrequency=1e-4
+writeCutPlanes=y
+cleanCutPlanes=y
+writeCutPlanesFrequency=1e-3
+writeIsoSurfaces=y
+cleanIsoSurfaces=y
+isoSurfaceThreshold=0.015
+writeIsoSurfacesFrequency=5e-3
+computeStatistics=true
+restartStatistics=true
+timeStartStatistics=1e-3
+
+# Snappy resources
+wallTimeSnappy=00:09:00
+nNodesSnappy=1
+nCoresSnappy=1
+memorySnappy=8
+
+# Foam resources
+wallTimeFoam=07:59:00
+nNodesFoam=3
+nCoresFoam=20
+memoryFoam=40
+
+### END OF INPUT PARAMETERS ###
+
+# Working directory
+workDir=$PWD
+echo
+echo " Running case in $workDir"		
+
+# Load modules
+module use /scratch/mathlab/packages/modules
+module load openfoam/2012
+
+
+# Make grid
+if [ "$runMesh" = "y" ]; then
+
+# Clean case
+echo
+echo " Cleaning case..."
+source $WM_PROJECT_DIR/bin/tools/CleanFunctions
+cleanTimeDirectories > dummy
+rm -rf 0 processor* postProcessing runSnappy.log checkMesh.log runFoam.log SNAPPY.* FOAM.* dummy
+echo " Done."
+
+# Set up snappy
+echo
+echo " Setting up Snappy..."
+
+\cp scheduler/runSnappy.org scheduler/runSnappy.sh
+\cp system/controlDictMesh.org system/controlDictMesh.tmp
+\cp system/blockMeshDict.org system/blockMeshDict
+\cp system/snappyHexMeshDict.org system/snappyHexMeshDict
+\cp system/extrudeMeshDict.org system/extrudeMeshDict
+
+sed -i -e 's/pipeLength/'$pipeLength'/g' system/extrudeMeshDict
+sed -i -e 's/axialResolution/'$axialResolution'/g' system/extrudeMeshDict
+
+sed -i -e 's/radialResolution/'$radialResolution'/g' system/blockMeshDict
+
+sed -i -e 's/nLayers/'$nLayers'/g' system/snappyHexMeshDict
+sed -i -e 's/radialExpansionRatio/'$radialExpansionRatio'/g' system/snappyHexMeshDict
+
+sed -i -e 's/projectAccount/'$projectAccount'/g' scheduler/runSnappy.sh
+sed -i -e 's/wallTimeSnappy/'$wallTimeSnappy'/g' scheduler/runSnappy.sh
+sed -i -e 's/nNodesSnappy/'$nNodesSnappy'/g' scheduler/runSnappy.sh
+sed -i -e 's/nCoresSnappy/'$nCoresSnappy'/g' scheduler/runSnappy.sh
+sed -i -e 's/memorySnappy/'$memorySnappy'/g' scheduler/runSnappy.sh
+sed -i -e 's/modelScaleValue/'$modelScale'/g' scheduler/runSnappy.sh
+sed -i -e 's/scaleUnits/'$pipeDiameter'/g' scheduler/runSnappy.sh
+sed -i -e 's/pipeLength/'$pipeLength'/g' scheduler/runSnappy.sh
+
+sed -i -e 's/endTimeValue/'$endTime'/g' system/controlDict
+
+
+echo " Done."
+
+# Submit snappy
+echo
+echo " Submitting Snappy..."
+FIRST=`sbatch --parsable scheduler/runSnappy.sh`
+echo " Done."
+fi
+
+# Run solver
+if [ "$runFoam" = "y" ]; then
+
+if [ "$restartRun" = "n" ]; then
+
+if [ "$runMesh" = "n" ]; then
+# Clean case
+echo
+echo " Cleaning case..."
+source $WM_PROJECT_DIR/bin/tools/CleanFunctions
+cleanTimeDirectories > dummy
+rm -rf 0 processor* postProcessing runFoam.log FOARM.* dummy
+echo " Done."
+fi
+
+# Set model parameters
+echo
+echo " Setting up model..."
+
+rm -rf 0.tmp
+cp -r 0.org 0.tmp
+
+\cp constant/transportProperties.org constant/transportProperties
+\cp system/fvOptions.org system/fvOptions
+
+sed -i -e 's/fluidViscosity/'$fluidViscosity'/g' constant/transportProperties
+sed -i -e 's/bulkVelocity/'$bulkVelocity'/g' constant/transportProperties
+sed -i -e 's/bulkVelocity/'$bulkVelocity'/g' system/fvOptions
+
+
+cp ./constant/perturbUDict.org  ./constant/perturbUDict
+pipeR=$(echo 'print( '$pipeDiameter ' /2.0)' |python2)
+sed -i -e 's/RADIUS/'$pipeR'/g' constant/perturbUDict
+
+
+
+
+echo " Done."
+fi
+
+# Set run parameters
+echo
+echo " Setting up Foam..."
+
+\cp system/controlDictFoam.org system/controlDictFoam.tmp
+
+if [ "$writeAll" = "n" ] ; then	writeAll=1; else writeAll=0; fi
+if [ "$writeCutPlanes" = "n" ] ; then writeCutPlanesFrequency=1e+06; fi
+if [ "$writeIsoSurfaces" = "n" ] ; then writeIsoSurfacesFrequency=1e+06; fi
+
+sed -i -e 's/endTimeValue/'$endTime'/g' system/controlDictFoam.tmp
+sed -i -e 's/timeStepSizeValue/'$timeStep'/g' system/controlDictFoam.tmp
+sed -i -e 's/writeIntervalValue/'$writeInterval'/g' system/controlDictFoam.tmp
+sed -i -e 's/writeAllValue/'$writeAll'/g' system/controlDictFoam.tmp
+sed -i -e 's/adjustTimeStepValue/'$adjustTimeStep'/g' system/controlDictFoam.tmp
+sed -i -e 's/maxCoValue/'$maxCourant'/g' system/controlDictFoam.tmp
+sed -i -e 's/writeMonitorsFrequency/'$writeMonitorsFrequency'/g' system/controlDictFoam.tmp
+sed -i -e 's/writeCutPlanesFrequency/'$writeCutPlanesFrequency'/g' system/controlDictFoam.tmp
+sed -i -e 's/writeIsoSurfacesFrequency/'$writeIsoSurfacesFrequency'/g' system/controlDictFoam.tmp
+sed -i -e 's/isoSurfaceThreshold/'$isoSurfaceThreshold'/g' system/controlDictFoam.tmp
+sed -i -e 's/computeStatistics'/$computeStatistics'/g' system/controlDictFoam.tmp
+sed -i -e 's/restartStatistics'/$restartStatistics'/g' system/controlDictFoam.tmp
+sed -i -e 's/timeStartStatistics/'$timeStartStatistics'/g' system/controlDictFoam.tmp
+
+# Set foam scheduler
+\cp scheduler/runFoam.org scheduler/runFoam.sh
+
+sed -i -e 's/projectAccount/'$projectAccount'/g' scheduler/runFoam.sh
+sed -i -e 's/wallTimeFoam/'$wallTimeFoam'/g' scheduler/runFoam.sh
+sed -i -e 's/nNodesFoam/'$nNodesFoam'/g' scheduler/runFoam.sh
+sed -i -e 's/nCoresFoam/'$nCoresFoam'/g' scheduler/runFoam.sh
+sed -i -e 's/memoryFoam/'$memoryFoam'/g' scheduler/runFoam.sh
+sed -i -e 's/foamRelease/'$foamRelease'/g' scheduler/runFoam.sh
+sed -i -e 's/restartRun/'$restartRun'/g' scheduler/runFoam.sh
+sed -i -e 's/decomposeCase/'$decomposeCase'/g' scheduler/runFoam.sh
+sed -i -e 's/cleanProcessors/'$cleanProcessors'/g' scheduler/runFoam.sh
+sed -i -e 's/reconstructAll/'$reconstructAll'/g' scheduler/runFoam.sh
+sed -i -e 's/writeCutPlanes/'$writeCutPlanes'/g' scheduler/runFoam.sh
+sed -i -e 's/cleanCutPlanes/'$cleanCutPlanes'/g' scheduler/runFoam.sh
+sed -i -e 's/cutPlanesFrequency/'$writeCutPlanesFrequency'/g' scheduler/runFoam.sh
+sed -i -e 's/writeIsoSurfaces/'$writeIsoSurfaces'/g' scheduler/runFoam.sh
+sed -i -e 's/cleanIsoSurfaces/'$cleanIsoSurfaces'/g' scheduler/runFoam.sh
+sed -i -e 's/isoSurfacesFrequency/'$writeIsoSurfacesFrequency'/g' scheduler/runFoam.sh
+sed -i -e 's/perturbFlow/'$perturbFlow'/g' scheduler/runFoam.sh
+
+echo " Done."
+
+# Submit foam
+echo
+echo " Submitting Foam..."
+if [ $FIRST ]; then
+	SECOND=`sbatch --dependency=afterok:$FIRST scheduler/runFoam.sh`
+else
+	SECOND=`sbatch scheduler/runFoam.sh`
+fi
+echo " Done."
+fi
+echo

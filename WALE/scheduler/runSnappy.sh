@@ -1,0 +1,71 @@
+#!/bin/bash
+#SBATCH --job-name=Georgi
+#SBATCH --account=gspasov
+#SBATCH --partition=regular1
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=00:09:00
+#SBATCH --mem=8GB
+#SBATCH --error FOAM.err
+#SBATCH --output FOAM.out
+
+
+# Load modules
+module use /scratch/mathlab/packages/modules
+module load openfoam/2012
+
+export FOAM_USER_APPBIN=/home/gspasov/OpenFoam/platforms/linux64IccDPInt32OptBDW/bin
+export FOAM_USER_LIBBIN=/home/gspasov/OpenFoam/platforms/linux64IccDPInt32OptBDW/lib
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$FOAM_USER_LIBBIN
+export PATH=$PATH:$FOAM_USER_APPBIN
+
+
+
+
+# Load control dictionary
+\cp system/controlDictMesh.tmp system/controlDict
+rm -f controlDictMesh.tmp
+
+# Initialize snappy
+rm -rf constant/polyMesh/*
+wait $!
+blockMesh > runSnappy.log
+wait $!
+surfaceFeatureExtract >> runSnappy.log
+wait $!
+
+# Run snappy
+if [ $SLURM_NTASKS -eq 1 ]; then
+	snappyHexMesh -overwrite >> runSnappy.log
+else
+	rm -rf processor*
+	wait $!
+	\cp system/decomposeParDictSnappy system/decomposeParDict
+	wait $!
+	sed -i -e 's/nProcSnappy/'$SLURM_NTASKS'/g' system/decomposeParDict
+	wait $!
+	decomposePar >> runSnappy.log
+	wait $!
+	mpirun -n $SLURM_NTASKS snappyHexMesh -parallel -overwrite >> runSnappy.log
+	wait $!
+	reconstructParMesh -constant -mergeTol 1e-06 >> runSnappy.log
+	wait $!
+	reconstructPar -constant -withZero >> runSnappy.log
+	wait $!
+	rm -rf processor*
+	wait $!
+fi
+
+# Finalize run
+transformPoints -scale '(2e-2 2e-2 2e-2)' >> runSnappy.log
+wait $!
+extrudeMesh >> runSnappy.log
+wait $!
+createPatch -overwrite >> runSnappy.log
+wait $!
+transformPoints -translate '(12e-2 0 0)' >> runSnappy.log
+wait $!
+checkMesh -constant > checkMesh.log
+wait $!
+rm -f 0/pointLevel 0/cellLevel *.obj
